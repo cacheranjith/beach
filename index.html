@@ -1,0 +1,210 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beach Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        #map { height: 600px; }
+        .review { border: 1px solid #ddd; padding: 10px; margin-top: 5px; background-color: #f9f9f9; }
+        .alert { color: red; font-weight: bold; }
+        .suitability-info { margin-top: 10px; }
+
+        /* Ad styling */
+        .ad-banner {
+            width: 100%;
+            height: 100px;
+            background-color: #f4f4f4;
+            text-align: center;
+            line-height: 100px;
+            margin-top: 10px;
+            border-top: 2px solid #ccc;
+            display: none; /* Hidden initially */
+        }
+        .ad-banner h3 {
+            margin: 0;
+        }
+        #map-container {
+            position: relative;
+        }
+        #map {
+            flex: 1;
+        }
+        #weather-info {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="map-container">
+        <div id="map"></div>
+    </div>
+
+    <div id="weather-info"></div>
+
+    <!-- Ad Banner -->
+    <div class="ad-banner" id="ad-banner">
+        <h3>Advertisement</h3>
+    </div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        const map = L.map('map').setView([20.5937, 78.9629], 5); // Center on India
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Beach locations with various conditions from your initial list
+        const beaches = [
+            { lat: 15.4958, lon: 73.7439, name: "Anjuna Beach", suitability: 4 },
+            { lat: 15.5081, lon: 73.7485, name: "Baga Beach", suitability: 5 },
+            { lat: 15.3069, lon: 73.8589, name: "Palolem Beach", suitability: 3 },
+            { lat: 11.9353, lon: 79.8365, name: "Pondicherry Beach", suitability: 4 },
+            { lat: 8.7356, lon: 76.7032, name: "Varkala Beach", suitability: 5 },
+            { lat: 8.3889, lon: 76.9760, name: "Kovalam Beach", suitability: 4 },
+            { lat: 9.1242, lon: 76.3828, name: "Marari Beach", suitability: 3 },
+            { lat: 17.7143, lon: 83.3237, name: "Rushikonda Beach", suitability: 2 },
+            { lat: 13.0500, lon: 80.2824, name: "Marina Beach", suitability: 5 },
+            { lat: 12.6121, lon: 80.1969, name: "Mahabalipuram Beach", suitability: 4 },
+            { lat: 18.9543, lon: 72.8115, name: "Girgaum Chowpatty", suitability: 3 },
+            { lat: 19.0759, lon: 72.8448, name: "Juhu Beach", suitability: 4 },
+            { lat: 18.6845, lon: 72.8141, name: "Alibaug Beach", suitability: 3 },
+            { lat: 20.71, lon: 70.98, name: "Diu Beach", suitability: 5 },
+            { lat: 23.0206, lon: 70.4725, name: "Mandvi Beach", suitability: 3 },
+            { lat: 8.8947, lon: 76.5535, name: "Thirumullavaram Beach", suitability: 4 },
+            { lat: 20.4254, lon: 72.8358, name: "Daman Beach", suitability: 3 },
+            { lat: 15.0062, lon: 74.0369, name: "Palolem Beach (Goa)", suitability: 4 },
+            { lat: 15.5526, lon: 73.7498, name: "Calangute Beach (Goa)", suitability: 4 },
+            { lat: 15.5521, lon: 73.7471, name: "Anjuna Beach (Goa)", suitability: 4 },
+            { lat: 15.5525, lon: 73.7672, name: "Vagator Beach (Goa)", suitability: 3 },
+            { lat: 15.5522, lon: 73.7616, name: "Candolim Beach (Goa)", suitability: 4 },
+            { lat: 15.2919, lon: 73.9946, name: "Colva Beach (Goa)", suitability: 4 },
+            { lat: 9.5002, lon: 76.3384, name: "Alappuzha Beach (Kerala)", suitability: 4 },
+            { lat: 11.2588, lon: 75.7804, name: "Kozhikode Beach (Kerala)", suitability: 3 },
+            { lat: 10.2130, lon: 76.2004, name: "Cherai Beach (Kerala)", suitability: 4 },
+            { lat: 8.0994, lon: 77.5385, name: "Kanyakumari Beach (Tamil Nadu)", suitability: 4 },
+            { lat: 9.2843, lon: 79.1581, name: "Rameswaram Beach (Tamil Nadu)", suitability: 3 },
+            { lat: 9.0287, lon: 79.2720, name: "Vadaserikkal Beach (Tamil Nadu)", suitability: 3 },
+            { lat: 12.0227, lon: 92.9640, name: "Radhanagar Beach (Havelock Island)", suitability: 5 },
+            { lat: 12.0055, lon: 92.9452, name: "Elephant Beach (Havelock Island)", suitability: 4 },
+            { lat: 21.6330, lon: 87.5285, name: "Digha Beach (West Bengal)", suitability: 3 },
+            { lat: 21.6737, lon: 87.6187, name: "Mandarmani Beach (West Bengal)", suitability: 3 },
+            { lat: 20.8933, lon: 70.4011, name: "Somnath Beach (Gujarat)", suitability: 4 },
+            { lat: 21.5222, lon: 70.4578, name: "Junagadh Beach (Gujarat)", suitability: 3 },
+            { lat: 21.6692, lon: 88.0740, name: "Sagar Island Beach (West Bengal)", suitability: 1 },
+            { lat: 21.2097, lon: 72.1078, name: "Gopnath Beach (Gujarat)", suitability: 1 },
+            { lat: 21.5111, lon: 87.0904, name: "Chandipur Beach (Odisha)", suitability: 1 },
+            { lat: 11.5561, lon: 92.5844, name: "North Sentinel Island Beach (Andaman and Nicobar Islands)", suitability: 1 },
+            { lat: 18.3562, lon: 72.8211, name: "Murud Beach (Maharashtra)", suitability: 1 },
+            { lat: 13.3415, lon: 74.7125, name: "Kundapura Beach (Karnataka)", suitability: 1 }
+        ];
+
+        const apiKey = 'c89e2a8377860a3f65007485d65e7c86'; // Replace with your OpenWeatherMap API key
+
+        // Function to get weather data and update reviews
+        function getWeather(lat, lon, name) {
+            fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`)
+                .then(response => response.json())
+                .then(data => {
+                    const weatherInfo = `
+                        <h3>Weather Information</h3>
+                        <p><strong>${data.name}</strong></p>
+                        <p>Temperature: ${data.main.temp} °C</p>
+                        <p>Weather: ${data.weather[0].description}</p>
+                        <p>Wind Speed: ${data.wind.speed} m/s</p>
+                        <p>Humidity: ${data.main.humidity} %</p>
+                        <p>Visibility: ${data.visibility / 1000} km</p>
+                    `;
+                    document.getElementById('weather-info').innerHTML = weatherInfo;
+                    updateReviews(name);
+                })
+                .catch(error => {
+                    console.error('Error fetching weather data:', error);
+                    document.getElementById('weather-info').innerHTML = '<p>Error fetching weather data.</p>';
+                });
+        }
+
+        // Function to update reviews
+        function updateReviews(beachName) {
+            const reviews = JSON.parse(localStorage.getItem(beachName)) || [];
+            let reviewHtml = `<h3>Reviews for ${beachName}</h3>`;
+            reviews.forEach(review => {
+                reviewHtml += `<div class="review"><strong>${review.username}</strong>: ${review.rating}/5<br>${review.text}</div>`;
+            });
+            reviewHtml += `<button onclick="submitReview('${beachName}')">Submit a review</button>`;
+            document.getElementById('weather-info').innerHTML += reviewHtml;
+        }
+
+        // Submit review function
+        function submitReview(beachName) {
+            const username = prompt("Enter your name:");
+            const rating = prompt("Rate the beach out of 5:");
+            const text = prompt("Write your review:");
+
+            const review = { username, rating, text };
+
+            let reviews = JSON.parse(localStorage.getItem(beachName)) || [];
+            reviews.push(review);
+            localStorage.setItem(beachName, JSON.stringify(reviews));
+
+            alert("Thank you for your review!");
+            updateReviews(beachName);
+        }
+
+        // Add beach markers to the map
+        beaches.forEach(createMarker);
+
+        // Function to create a marker with color coding
+        function createMarker(beach) {
+            const color = getColorBySuitability(beach.suitability);
+            const marker = L.circleMarker([beach.lat, beach.lon], {
+                radius: 8,
+                fillColor: color,
+                color: color,
+                weight: 1,
+                opacity: 1,
+                fillOpacity: 0.8
+            }).addTo(map);
+
+            marker.bindPopup(`
+                <b>${beach.name}</b><br>
+                <p>Suitability: ${getSuitabilityDescription(beach.suitability)}</p>
+                <button onclick="getWeather(${beach.lat}, ${beach.lon}, '${beach.name}')">Get Weather</button>
+            `);
+
+            // Event listener to show ad when a marker is clicked
+            marker.on('click', () => {
+                document.getElementById('ad-banner').style.display = 'block'; // Show the ad banner
+            });
+        }
+
+        // Function to determine color based on suitability
+        function getColorBySuitability(suitability) {
+            switch (suitability) {
+                case 5: return 'green';
+                case 4: return 'blue';
+                case 3: return 'yellow';
+                case 2: return 'orange';
+                default: return 'red';
+            }
+        }
+
+        // Function to get description of suitability
+        function getSuitabilityDescription(suitability) {
+            switch (suitability) {
+                case 5: return 'Excellent (Green)';
+                case 4: return 'Good (Blue)';
+                case 3: return 'Moderate (Yellow)';
+                case 2: return 'Poor (Orange)';
+                default: return 'Very Poor (Red)';
+            }
+        }
+    </script>
+</body>
+</html>
